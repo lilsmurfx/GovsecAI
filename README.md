@@ -224,15 +224,7 @@ No citizen personal data included by default
 
  Offline local-network deployment
 
-🤝 Contributing
 
-Pull requests are welcome!
-Open an issue for feature requests or bugs.
 
-📄 License
 
-MIT License — Free for public + government use.
 
-✅ generate a full documentation wiki
-
-Just tell me what to add next.
