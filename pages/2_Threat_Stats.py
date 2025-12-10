@@ -5,21 +5,34 @@ import os
 
 st.title('📊 Threat Stats')
 
-# --- Load logs safely ---
-logs_path = os.path.join("logs", "scans.csv")
+# --- Ensure logs folder exists ---
+logs_dir = "logs"
+os.makedirs(logs_dir, exist_ok=True)
 
-if os.path.exists(logs_path):
-    try:
-        logs = pd.read_csv(logs_path)
-    except Exception as e:
-        st.warning(f"Error reading logs file: {e}")
-        logs = pd.DataFrame({'timestamp': [], 'url': [], 'label': [], 'score': []})
-else:
+# Path to logs CSV
+logs_path = os.path.join(logs_dir, "scans.csv")
+
+# --- Initialize logs CSV if missing ---
+if not os.path.exists(logs_path):
+    # Create empty CSV with headers
+    sample_logs = pd.DataFrame({
+        'timestamp': [],
+        'url': [],
+        'label': [],
+        'score': []
+    })
+    sample_logs.to_csv(logs_path, index=False)
+
+# --- Load logs safely ---
+try:
+    logs = pd.read_csv(logs_path)
+except Exception as e:
+    st.warning(f"Error reading logs file: {e}")
     logs = pd.DataFrame({'timestamp': [], 'url': [], 'label': [], 'score': []})
 
 # Ensure 'label' column exists
 if 'label' not in logs.columns:
-    logs['label'] = []
+    logs['label'] = None
 
 # --- Recent scans table ---
 st.subheader('Recent scans')
@@ -31,14 +44,14 @@ else:
 # --- Sample distribution pie chart ---
 st.subheader('Sample distribution')
 if logs.empty:
-    # Show sample static chart if no logs
+    # Show sample static chart if no logs yet
     sample = pd.DataFrame({
         'Category': ['Safe', 'Suspicious', 'Malicious'],
         'Count': [120, 35, 22]
     })
     fig = px.pie(sample, names='Category', values='Count', title='Detected Threats Overview')
 else:
-    # Ensure label values are consistent
+    # Map label values safely
     def map_label(x):
         if x in [0, '0', 'Safe']:
             return 'Safe'
@@ -48,10 +61,9 @@ else:
             return 'Other'
 
     logs['label'] = logs['label'].apply(map_label)
-    
+
     # Aggregate counts
     agg = logs['label'].value_counts().rename_axis('label').reset_index(name='Count')
-    
     fig = px.pie(agg, names='label', values='Count', title='Detected Threats Overview')
 
 st.plotly_chart(fig, use_container_width=True)
